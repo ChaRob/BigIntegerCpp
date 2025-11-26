@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="SampleCode.cpp" />
     <ClCompile Include="src\BigInteger.cpp" />
+    <ClCompile Include="src\SampleCode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\BigInteger.h" />

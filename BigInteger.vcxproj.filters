@@ -18,7 +18,7 @@
     <ClCompile Include="src\BigInteger.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="SampleCode.cpp">
+    <ClCompile Include="src\SampleCode.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
   </ItemGroup>
