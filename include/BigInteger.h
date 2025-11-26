@@ -4,13 +4,21 @@
 //////////////////////////
 #include <vector>
 #include <string>
-#include <iostream>
+#include <iosfwd>
 
 class BigInteger
 {
 	// 생성자, 소멸자 정의
 public:
 	BigInteger(std::string _data = "");
+	BigInteger(const char* _data);
+	BigInteger(int _value);
+	BigInteger(long long _value);
+	BigInteger(unsigned int _value);
+	BigInteger(unsigned long long _value);
+
+	explicit BigInteger(double _value);		// 실수 -> 정수부 암시적 형변환 방지
+
 	~BigInteger();
 
 	// 공용 멤버 변수 정릐

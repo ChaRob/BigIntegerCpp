@@ -1,5 +1,7 @@
 ﻿#include "BigInteger.h"
 #include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <stdexcept>
 
 using ll = long long;
@@ -7,6 +9,75 @@ using ll = long long;
 BigInteger::BigInteger(std::string _data) : m_isNegative(false)
 {
 	MakeDigit(_data);
+}
+
+BigInteger::BigInteger(const char* _data) : m_isNegative(false)
+{
+	if (_data == nullptr)
+	{
+		m_digit.clear();
+		m_digit.push_back(0);
+		return;
+	}
+	MakeDigit(std::string(_data));
+}
+
+BigInteger::BigInteger(int _value) : m_isNegative(false)
+{
+	MakeDigit(std::to_string(_value));
+}
+
+BigInteger::BigInteger(long long _value) : m_isNegative(false)
+{
+	MakeDigit(std::to_string(_value));
+}
+
+BigInteger::BigInteger(unsigned int _value) : m_isNegative(false)
+{
+	MakeDigit(std::to_string(_value));
+}
+
+BigInteger::BigInteger(unsigned long long _value) : m_isNegative(false)
+{
+	MakeDigit(std::to_string(_value));
+}
+
+BigInteger::BigInteger(double _value) : m_isNegative(false)
+{
+	if (std::isnan(_value) || std::isinf(_value))
+	{
+		throw std::invalid_argument("BigInteger: NaN or Inf is not supported");
+	}
+
+	// 소수 부분 제거
+	long double tmp = std::trunc(static_cast<long double>(_value));
+
+	if (tmp == 0.0L)
+	{
+		m_digit.clear();
+		m_digit.push_back(0);
+		m_isNegative = false;
+		return;
+	}
+
+	// 음수일 시 부호 변환
+	if (tmp < 0.0L)
+	{
+		m_isNegative = true;
+		tmp = -tmp;
+	}
+
+	m_digit.clear();
+	while (tmp > 0.0L)
+	{
+		// base마다 자른 chunk 넣기
+		long double quotient = std::floor(tmp / m_base);
+		int chunk = static_cast<int>(tmp - quotient * m_base);
+		m_digit.push_back(chunk);
+		tmp = quotient;
+	}
+
+	Normalize();
 }
 
 BigInteger::~BigInteger()
@@ -226,6 +297,13 @@ void BigInteger::MakeDigit(std::string _data)
 {
 	m_digit.clear();
 
+	// erase whitespace
+	while (!_data.empty() && std::isspace(_data.front()) != 0)
+		_data.erase(_data.begin());
+	while (!_data.empty() && std::isspace(_data.back()) != 0)
+		_data.pop_back();
+
+	// if empty return 0
 	if (_data.empty() || _data == "0")
 	{
 		m_digit.push_back(0);
@@ -234,15 +312,32 @@ void BigInteger::MakeDigit(std::string _data)
 	}
 
 	// check if data is negative
-	if (_data[0] == '-')
+	if (_data[0] == '-' || _data[0] == '+')
 	{
-		m_isNegative = true;
+		if (_data[0] == '-')
+			m_isNegative = true;
+		
 		_data.erase(0, 1);
+		if (_data.empty())
+			throw std::invalid_argument("BigInteger: sign only string");
+	}
+
+	for (char c : _data)
+	{
+		if (c < '0' || c > '9')
+			throw std::invalid_argument("BigInteger: invalid charactor in string");
 	}
 
 	// erase unnecessary the front of '0'
-	while (_data.size() > 1 && _data[0] == '0')
-		_data.erase(0, 1);
+	auto firstNonZero = _data.find_first_not_of('0');
+	if (firstNonZero == std::string::npos)
+	{
+		m_isNegative = false;
+		m_digit.push_back(0);
+		return;
+	}
+	if (firstNonZero > 0)
+		_data.erase(0, firstNonZero);
 
 	// split string data
 	int dataIndex = _data.size();
