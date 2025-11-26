@@ -25,6 +25,7 @@ C++로 구현된 임의 정밀도 정수(Big Integer) 연산 라이브러리입�
 - 내부 구조  
   - base = 10^4
   - little-endian vector 저장 방식
+- Windows / x64 / MSVC Release 빌드
 
 ---
 
