@@ -370,6 +370,23 @@ namespace bigint
 			return false;
 		}
 	}
+	
+	BigInteger BigInteger::Abs() const
+	{
+		BigInteger result = *this;
+		result.m_isNegative = false;
+		return result;
+	}
+
+	bool BigInteger::IsZero() noexcept
+	{
+		return m_digit.size() == 1 && m_digit[0] == 0;
+	}
+
+	bool BigInteger::IsNegative() noexcept
+	{
+		return m_isNegative;
+	}
 
 	void BigInteger::MakeDigit(std::string _data)
 	{

@@ -60,6 +60,11 @@ namespace bigint
 		bool TryToInt(int& _out) noexcept;				// noexcept 키워드로 내부에서 예외 처리하지 않고 흘려보내기 (false)
 		bool TryToLongLong(long long& _out) noexcept;
 
+		// 유틸리티 관련 함수
+		BigInteger Abs() const;
+		bool IsZero() noexcept;
+		bool IsNegative() noexcept;
+		
 		// 내부 멤버 함수 정의
 	private:
 		void MakeDigit(std::string _data = "");
