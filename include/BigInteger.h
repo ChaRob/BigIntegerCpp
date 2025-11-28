@@ -1,6 +1,6 @@
-ï»¿#pragma once
+#pragma once
 //////////////////////////
-//		ì‹œìŠ¤í…œ í—¤ë”		//
+//		½Ã½ºÅÛ Çì´õ		//
 //////////////////////////
 #include <vector>
 #include <string>
@@ -10,7 +10,7 @@ namespace bigint
 {
 	class BigInteger
 	{
-		// ìƒì„±ì, ì†Œë©¸ì ì •ì˜
+		// »ı¼ºÀÚ, ¼Ò¸êÀÚ Á¤ÀÇ
 	public:
 		BigInteger(std::string _data = "");
 		BigInteger(const char* _data);
@@ -19,21 +19,21 @@ namespace bigint
 		BigInteger(unsigned int _value);
 		BigInteger(unsigned long long _value);
 
-		explicit BigInteger(double _value);		// ì‹¤ìˆ˜ -> ì •ìˆ˜ë¶€ ì•”ì‹œì  í˜•ë³€í™˜ ë°©ì§€
+		explicit BigInteger(double _value);		// ½Ç¼ö -> Á¤¼öºÎ ¾Ï½ÃÀû Çüº¯È¯ ¹æÁö
 
 		~BigInteger();
 
-		// ê³µìš© ë©¤ë²„ ë³€ìˆ˜ ì •ë¦
+		// °ø¿ë ¸â¹ö º¯¼ö Á¤l
 	private:
-		static const int m_base = 10000;	// ê¸°ìˆ˜, í•­ìƒ 10ì˜ ì œê³±ìœ¼ë¡œ í‘œí˜„ë˜ì•¼í•¨
-		static const int m_chunk = 4;		// ê¸°ìˆ˜ì— ë”°ë¥¸ ì‚¬ì´ì¦ˆ
+		static const int m_base = 10000;	// ±â¼ö, Ç×»ó 10ÀÇ Á¦°öÀ¸·Î Ç¥ÇöµÇ¾ßÇÔ
+		static const int m_chunk = 4;		// ±â¼ö¿¡ µû¸¥ »çÀÌÁî
 
-		// í´ë˜ìŠ¤ ë©¤ë²„ ë³€ìˆ˜ ì •ì˜
+		// Å¬·¡½º ¸â¹ö º¯¼ö Á¤ÀÇ
 	private:
-		std::vector<int> m_digit;	// little endian ë°°ì—´
-		bool m_isNegative;			// ìŒìˆ˜ ë°ì´í„° ì²´í¬
+		std::vector<int> m_digit;	// little endian ¹è¿­
+		bool m_isNegative;			// À½¼ö µ¥ÀÌÅÍ Ã¼Å©
 
-		// Operator ì •ì˜
+		// Operator Á¤ÀÇ
 	public:
 		BigInteger operator+(const BigInteger& _other) const;
 		BigInteger operator+(const int& _other) const;
@@ -56,35 +56,40 @@ namespace bigint
 		BigInteger& operator=(const BigInteger& _other);
 		BigInteger& operator+=(const BigInteger& _other);
 		BigInteger& operator-=(const BigInteger& _other);
-		BigInteger& operator++();		// ì „ìœ„ ++x
-		BigInteger& operator++(int);	// í›„ìœ„ x++
+		BigInteger& operator++();		// ÀüÀ§ ++x
+		BigInteger& operator++(int);	// ÈÄÀ§ x++
 		BigInteger& operator--();
 		BigInteger& operator--(int);
 
-		// ì™¸ë¶€ ë©¤ë²„ í•¨ìˆ˜ ì •ì˜
+		// ¿ÜºÎ ¸â¹ö ÇÔ¼ö Á¤ÀÇ
 	public:
-		// BigInteger í˜• ë³€í™˜
+		// BigInteger Çü º¯È¯
 		std::string ToString() const;
 		int ToInt() const;
 		long long ToLongLong() const;
-		bool TryToInt(int& _out) noexcept;				// noexcept í‚¤ì›Œë“œë¡œ ë‚´ë¶€ì—ì„œ ì˜ˆì™¸ ì²˜ë¦¬í•˜ì§€ ì•Šê³  í˜ë ¤ë³´ë‚´ê¸° (false)
+		bool TryToInt(int& _out) noexcept;				// noexcept Å°¿öµå·Î ³»ºÎ¿¡¼­ ¿¹¿Ü Ã³¸®ÇÏÁö ¾Ê°í Èê·Áº¸³»±â (false)
 		bool TryToLongLong(long long& _out) noexcept;
 
-		// ìœ í‹¸ë¦¬í‹° ê´€ë ¨ í•¨ìˆ˜
+		// À¯Æ¿¸®Æ¼ °ü·Ã ÇÔ¼ö
 		BigInteger Abs() const;
-		bool IsZero() noexcept;
-		bool IsNegative() noexcept;
+		bool IsZero() const noexcept;
+		bool IsNegative() const noexcept;
+
+		static BigInteger Pow(BigInteger _base, unsigned long long _exp);						// °ÅµìÁ¦°ö
+		static BigInteger ModPow(BigInteger _base, BigInteger _exp, const BigInteger& _mod);	// ¸ğµâ·¯ °ÅµìÁ¦°ö
+		static BigInteger Gcd(BigInteger _a, BigInteger _b);									// ÃÖ´ë°ø¾à¼ö
+		static BigInteger Lcm(BigInteger _a, BigInteger _b);									// ÃÖ¼Ò°ø¹è¼ö
 		
-		// ë‚´ë¶€ ë©¤ë²„ í•¨ìˆ˜ ì •ì˜
+		// ³»ºÎ ¸â¹ö ÇÔ¼ö Á¤ÀÇ
 	private:
 		void MakeDigit(std::string _data = "");
 		void Normalize();
-		int CompareAbs(const BigInteger& _other) const; // 1 : this ë©¤ë²„, -1 : ë§¤ê°œë³€ìˆ˜ ë©¤ë²„, 0 : ì™„ì „ ë™ì¼
-		int Compare(const BigInteger& _other) const;	// CompareAbsì™€ ë™ì¼, ë¶€í˜¸ í¬í•¨
+		int CompareAbs(const BigInteger& _other) const; // 1 : this ¸â¹ö, -1 : ¸Å°³º¯¼ö ¸â¹ö, 0 : ¿ÏÀü µ¿ÀÏ
+		int Compare(const BigInteger& _other) const;	// CompareAbs¿Í µ¿ÀÏ, ºÎÈ£ Æ÷ÇÔ
 
-		// ì ˆëŒ€ê°’ ì—°ì‚° í—¬í¼
+		// Àı´ë°ª ¿¬»ê ÇïÆÛ
 		static BigInteger AddAbs(const BigInteger& _a, const BigInteger& _b);
-		static BigInteger SubAbs(const BigInteger& _a, const BigInteger& _b); // |a| > |b| ê°€ì •
+		static BigInteger SubAbs(const BigInteger& _a, const BigInteger& _b); // |a| > |b| °¡Á¤
 		static BigInteger MulSmall(const BigInteger& _a, int _factor);
 		static void DivModAbs(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder);
 	};
