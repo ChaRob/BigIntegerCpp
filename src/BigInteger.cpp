@@ -130,6 +130,16 @@ namespace bigint
 		return result;
 	}
 
+	BigInteger BigInteger::operator+(const int& _other) const
+	{
+		return *this + BigInteger(_other);
+	}
+
+	BigInteger BigInteger::operator+(const long long& _other) const
+	{
+		return *this + BigInteger(_other);
+	}
+
 	BigInteger BigInteger::operator-(const BigInteger& _other) const
 	{
 		BigInteger temp = _other;
@@ -150,11 +160,11 @@ namespace bigint
 
 		// 자릿수 미리 확보
 		result.m_digit.assign(m_digit.size() + _other.m_digit.size(), 0);
-		for (int i = 0; i < m_digit.size(); i++)
+		for (size_t i = 0; i < m_digit.size(); i++)
 		{
 			ll carry = 0;
 
-			for (int j = 0; j < _other.m_digit.size(); j++)
+			for (size_t j = 0; j < _other.m_digit.size(); j++)
 			{
 				ll value = result.m_digit[i + j]
 					+ (ll)m_digit[i] * _other.m_digit[j]
@@ -279,6 +289,54 @@ namespace bigint
 		return _is;
 	}
 
+	BigInteger& BigInteger::operator=(const BigInteger& _other)
+	{
+		if (this != &_other)
+		{
+			m_digit = _other.m_digit;
+			m_isNegative = _other.m_isNegative;
+		}
+		return *this;
+	}
+
+	BigInteger& BigInteger::operator+=(const BigInteger& _other)
+	{
+		*this = *this + _other;
+		return *this;
+	}
+
+	BigInteger& BigInteger::operator-=(const BigInteger& _other)
+	{
+		*this = *this - _other;
+		return *this;
+	}
+
+	BigInteger& BigInteger::operator++()
+	{
+		*this = *this + 1;
+		return *this;
+	}
+
+	BigInteger& BigInteger::operator++(int)
+	{
+		BigInteger prev = *this;
+		*this = *this + 1;
+		return *this;
+	}
+
+	BigInteger& BigInteger::operator--()
+	{
+		*this = *this - 1;
+		return *this;
+	}
+
+	BigInteger& BigInteger::operator--(int)
+	{
+		BigInteger prev = *this;
+		*this = *this - 1;
+		return *this;
+	}
+
 	std::string BigInteger::ToString() const
 	{
 		if (m_digit.empty()) return "0";
@@ -288,7 +346,7 @@ namespace bigint
 
 		data += std::to_string(m_digit.back());
 
-		for (int i = m_digit.size() - 2; i >= 0; i--)
+		for (int i = static_cast<int>(m_digit.size()) - 2; i >= 0; i--)
 		{
 			std::string block = std::to_string(m_digit[i]);
 			while (block.size() < 4) block = '0' + block;
@@ -315,11 +373,11 @@ namespace bigint
 		// 자료형 내에 들어오는지 검사
 		//	음수의 경우 LLONG_MAX + 1 까지 (LLONG_MIN)
 		//	양수의 경우 LLONG_MAX 까지
-		unsigned long long ulimit = std::numeric_limits<long long>::max();
+		constexpr unsigned long long ulimit = std::numeric_limits<long long>::max();
 		unsigned long long limit = m_isNegative ? (ulimit + 1) : ulimit;
 		unsigned long long value = 0;
 
-		for (int i = m_digit.size() - 1; i >= 0; i--)
+		for (int i = static_cast<int>(m_digit.size()) - 1; i >= 0; i--)
 		{
 			unsigned int digit = static_cast<unsigned int>(m_digit[i]);
 
@@ -435,7 +493,7 @@ namespace bigint
 			_data.erase(0, firstNonZero);
 
 		// split string data
-		int dataIndex = _data.size();
+		int dataIndex = (int)_data.size();
 		while (dataIndex > 0)
 		{
 			int chunkSize = std::min(m_chunk, dataIndex);
@@ -454,7 +512,7 @@ namespace bigint
 	void BigInteger::Normalize()
 	{
 		ll carry = 0;
-		for (int i = 0; i < m_digit.size(); i++)
+		for (size_t i = 0; i < m_digit.size(); i++)
 		{
 			ll value = (ll)m_digit[i] + carry;
 
@@ -484,7 +542,7 @@ namespace bigint
 		if (m_digit.size() < _other.m_digit.size()) return -1;
 
 		// 크기가 같을 때 사이즈 비교 넣기
-		for (int i = m_digit.size() - 1; i >= 0; i--)
+		for (int i = static_cast<int>(m_digit.size()) - 1; i >= 0; i--)
 		{
 			if (m_digit[i] > _other.m_digit[i]) return 1;
 			if (m_digit[i] < _other.m_digit[i]) return -1;
@@ -520,11 +578,11 @@ namespace bigint
 	{
 		BigInteger result;
 		result.m_digit.clear();
-		int maxSize = std::max(_a.m_digit.size(), _b.m_digit.size());
+		size_t maxSize = std::max(_a.m_digit.size(), _b.m_digit.size());
 		ll carry = 0;
 
 		// 두 수의 최대 사이즈를 비교한 뒤, 각 항목에서 더하기.
-		for (int i = 0; i < maxSize; i++)
+		for (size_t i = 0; i < maxSize; i++)
 		{
 			ll value = carry;
 			if (i < _a.m_digit.size()) value += _a.m_digit[i];
@@ -548,7 +606,7 @@ namespace bigint
 		result.m_digit.clear();
 		ll borrow = 0;
 
-		for (int i = 0; i < _a.m_digit.size(); i++)
+		for (size_t i = 0; i < _a.m_digit.size(); i++)
 		{
 			ll value = _a.m_digit[i] - borrow;
 			if (i < _b.m_digit.size()) value -= _b.m_digit[i];
@@ -578,7 +636,7 @@ namespace bigint
 		result.m_digit.clear();
 
 		ll carry = 0;
-		for (int i = 0; i < _a.m_digit.size(); i++)
+		for (size_t i = 0; i < _a.m_digit.size(); i++)
 		{
 			ll value = (ll)_a.m_digit[i] * _factor + carry;
 			result.m_digit.push_back(value % m_base);
@@ -632,8 +690,8 @@ namespace bigint
 		_remainder = _a;
 		_remainder.m_isNegative = false;
 
-		int n = _remainder.m_digit.size();
-		int m = _b.m_digit.size();
+		int n = static_cast<int>(_remainder.m_digit.size());
+		int m = static_cast<int>(_b.m_digit.size());
 
 		int maxShift = n - m;
 		_quotient.m_digit.assign(maxShift + 1, 0);

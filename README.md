@@ -17,14 +17,17 @@ C++로 구현된 임의 정밀도 정수(Big Integer) 연산 라이브러리입�
 현재 라이브러리가 제공하는 기능은 다음과 같습니다.
 
 - 문자열 기반 생성자 (`BigInteger("12345678901234567890")`)
-- 사칙연산 (`+`, `-`, `*`, `/`, `%`)
-- 비교 연산 ( `==`, `!=`, `<`, `<=`, `>`, `>=`)
-- 부호 지원 (음수/양수)
-- `<<`, `>>` 스트림 연산자 지원
-- `ToString()` 함수 제공
+- 사칙연산 ( `+`, `-`, `*`, `/`, `%` )
+- 비교 연산 ( `==`, `!=`, `<`, `<=`, `>`, `>=` )
+- 부호 판별
+- 스트림 연산자 ( `<<`, `>>` )
+- 증감, 대입 연산자 ( `+=`, `-=`, `++`, `--`, `=`)
+- string 및 int, long long 변환 함수 제공
 - 내부 구조  
   - base = 10^4
   - little-endian vector 저장 방식
+- 10^100 까지 연산속도 보장
+- Windows / x64 / MSVC Release 빌드
 
 ---
 
@@ -36,11 +39,11 @@ C++로 구현된 임의 정밀도 정수(Big Integer) 연산 라이브러리입�
 
 int main()
 {
-    BigInteger a("12345678901234567890");
-    BigInteger b("9876543210");
+    bigint::BigInteger a("12345678901234567890");
+    bigint::BigInteger b("9876543210");
 
-    BigInteger sum = a + b;
-    BigInteger mul = a * b;
+    bigint::BigInteger sum = a + b;
+    bigint::BigInteger mul = a * b;
 
     std::cout << "Sum : " << sum << std::endl;
     std::cout << "Mul : " << mul << std::endl;
@@ -53,6 +56,8 @@ int main()
 
 ## 🏗️ How to Build
 
+❗ 현재 버전은 Window x64 MSVC Release 빌드에서만 사용 가능합니다. 추후 확장 예정입니다.
+
 1. Static Library (BigInteger.lib)와 Header (BigInteger.h) 파일을 다운로드 합니다.
 2. BigInteger를 사용하려는 C++ 프로젝트에서 다음과 같이 설정합니다.
     - include 경로에 BigInteger.h 가 있는 폴더 추가
@@ -62,15 +67,9 @@ int main()
 
 ## 🔌 Usage Notes
 
+- namespace bigint를 지정하여 사용하여 주십시오.
 - 내부 기수(base)는 10^4이며 정수는 vector<int>로 저장됩니다.
 - 연산 속도는 기수 변경과 알고리즘 개선을 통해 향후 더 최적화될 예정입니다.
 - Karatsuba, FFT 기반 곱셈, 모듈러 연산 확장 등이 업데이트될 수 있습니다.
-
----
-
-## 📄 License
-
-이 프로젝트는 MIT License 하에서 배포됩니다.
-자세한 내용은 LICENSE 파일을 참고하세요.
 
 ---

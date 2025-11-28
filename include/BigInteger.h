@@ -24,7 +24,7 @@ namespace bigint
 		~BigInteger();
 
 		// 공용 멤버 변수 정릐
-	public:
+	private:
 		static const int m_base = 10000;	// 기수, 항상 10의 제곱으로 표현되야함
 		static const int m_chunk = 4;		// 기수에 따른 사이즈
 
@@ -36,12 +36,14 @@ namespace bigint
 		// Operator 정의
 	public:
 		BigInteger operator+(const BigInteger& _other) const;
+		BigInteger operator+(const int& _other) const;
+		BigInteger operator+(const long long& _other) const;
 		BigInteger operator-(const BigInteger& _other) const;
 		BigInteger operator*(const BigInteger& _other) const;
 		BigInteger operator/(const BigInteger& _other) const;
 		BigInteger operator%(const BigInteger& _other) const;
 
-		bool operator==(const BigInteger& _other) const;
+		bool operator==(const BigInteger& _other) const;    
 		bool operator!=(const BigInteger& _other) const;
 		bool operator<(const BigInteger& _other) const;
 		bool operator<=(const BigInteger& _other) const;
@@ -50,6 +52,14 @@ namespace bigint
 
 		friend std::ostream& operator<<(std::ostream& _os, const BigInteger& _value);
 		friend std::istream& operator>>(std::istream& _is, BigInteger& _value);
+
+		BigInteger& operator=(const BigInteger& _other);
+		BigInteger& operator+=(const BigInteger& _other);
+		BigInteger& operator-=(const BigInteger& _other);
+		BigInteger& operator++();		// 전위 ++x
+		BigInteger& operator++(int);	// 후위 x++
+		BigInteger& operator--();
+		BigInteger& operator--(int);
 
 		// 외부 멤버 함수 정의
 	public:
