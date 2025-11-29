@@ -381,7 +381,7 @@ namespace bigint
 		for (int i = static_cast<int>(m_digit.size()) - 2; i >= 0; i--)
 		{
 			std::string block = std::to_string(m_digit[i]);
-			while (block.size() < 4) block = '0' + block;
+			while (block.size() < m_chunk) block = '0' + block;
 			data += block;
 		}
 		return data;
