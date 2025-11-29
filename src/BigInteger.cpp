@@ -1,4 +1,4 @@
-ï»¿#include "BigInteger.h"
+#include "BigInteger.h"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -53,7 +53,7 @@ namespace bigint
 			throw std::invalid_argument("BigInteger: NaN or Inf is not supported");
 		}
 
-		// ì†Œìˆ˜ ë¶€ë¶„ ì œê±°
+		// ¼Ò¼ö ºÎºĞ Á¦°Å
 		long double tmp = std::trunc(static_cast<long double>(_value));
 
 		if (tmp == 0.0L)
@@ -64,7 +64,7 @@ namespace bigint
 			return;
 		}
 
-		// ìŒìˆ˜ì¼ ì‹œ ë¶€í˜¸ ë³€í™˜
+		// À½¼öÀÏ ½Ã ºÎÈ£ º¯È¯
 		if (tmp < 0.0L)
 		{
 			m_isNegative = true;
@@ -74,7 +74,7 @@ namespace bigint
 		m_digit.clear();
 		while (tmp > 0.0L)
 		{
-			// baseë§ˆë‹¤ ìë¥¸ chunk ë„£ê¸°
+			// base¸¶´Ù ÀÚ¸¥ chunk ³Ö±â
 			long double quotient = std::floor(tmp / m_base);
 			int chunk = static_cast<int>(tmp - quotient * m_base);
 			m_digit.push_back(chunk);
@@ -92,7 +92,7 @@ namespace bigint
 	BigInteger BigInteger::operator+(const BigInteger& _other) const
 	{
 		BigInteger result;
-		// ë¶€í˜¸ê°€ ê°™ì€ ê²½ìš° ì ˆëŒ€ê°’ìœ¼ë¡œ ë”í•˜ê³  ë¶€í˜¸ ë¶™ì´ê¸°
+		// ºÎÈ£°¡ °°Àº °æ¿ì Àı´ë°ªÀ¸·Î ´õÇÏ°í ºÎÈ£ ºÙÀÌ±â
 		if (m_isNegative == _other.m_isNegative)
 		{
 			result = AddAbs(*this, _other);
@@ -104,7 +104,7 @@ namespace bigint
 			return result;
 		}
 
-		// ë¶€í˜¸ê°€ ë‹¤ë¥¸ ê²½ìš° ë‘ ìˆ˜ë¥¼ ë¹„êµ í›„ ì—°ì‚°
+		// ºÎÈ£°¡ ´Ù¸¥ °æ¿ì µÎ ¼ö¸¦ ºñ±³ ÈÄ ¿¬»ê
 		int cmp = CompareAbs(_other);
 
 		if (cmp == 0) return BigInteger("0");
@@ -143,7 +143,7 @@ namespace bigint
 	BigInteger BigInteger::operator-(const BigInteger& _other) const
 	{
 		BigInteger temp = _other;
-		// ë¶€í˜¸ ë°˜ì „
+		// ºÎÈ£ ¹İÀü
 		if (!(temp.m_digit.size() == 1 && temp.m_digit[0] == 0))
 		{
 			temp.m_isNegative = !temp.m_isNegative;
@@ -155,10 +155,33 @@ namespace bigint
 	BigInteger BigInteger::operator*(const BigInteger& _other) const
 	{
 		BigInteger result;
-		// XOR ì—°ì‚°ìœ¼ë¡œ ë¶€í˜¸ ì²˜ë¦¬
+
+		// 0 Ã¼Å©
+		if ((m_digit.size() == 1 && m_digit[0] == 0) ||
+			(_other.m_digit.size() == 1 && _other.m_digit[0] == 0))
+		{
+			// ÃÊ±â result = 0
+			return result;
+		}
+
+		// ¸¸¾à m_baseº¸´Ù ÀÛ´Ù¸é MulSmall·Î ·ÎÁ÷ Ã³¸®
+		if (_other.m_digit.size() == 1 || m_digit.size() == 1)
+		{
+			if (_other.m_digit.size() == 1)
+				result = MulSmall(*this, _other.m_digit[0]);
+			else
+				result = MulSmall(_other, m_digit[0]);
+
+			result.m_isNegative = (m_isNegative != _other.m_isNegative);
+			if (result.m_digit.size() == 1 && result.m_digit[0] == 0)
+				result.m_isNegative = false;
+			return result;
+		}
+
+		// XOR ¿¬»êÀ¸·Î ºÎÈ£ Ã³¸®
 		result.m_isNegative = (m_isNegative != _other.m_isNegative);
 
-		// ìë¦¿ìˆ˜ ë¯¸ë¦¬ í™•ë³´
+		// ÀÚ¸´¼ö ¹Ì¸® È®º¸
 		result.m_digit.assign(m_digit.size() + _other.m_digit.size(), 0);
 		for (size_t i = 0; i < m_digit.size(); i++)
 		{
@@ -174,11 +197,20 @@ namespace bigint
 				carry = value / m_base;
 			}
 
-			// ë§ˆì§€ë§‰ ìë¦¬ì˜ carryëŠ” ê³ ì •ëœ ìœ„ì¹˜ì—ë§Œ ë”í•¨
-			result.m_digit[i + _other.m_digit.size()] += (int)carry;
+			int pos = i + _other.m_digit.size();
+			while (carry > 0)
+			{
+				ll value = result.m_digit[pos] + carry;
+
+				result.m_digit[pos] = value % m_base;
+				carry = value / m_base;
+				pos++;
+			}
 		}
 
-		result.Normalize();
+		// ÃÖ»óÀ§ 0 Á¦°Å
+		while (result.m_digit.size() > 1 && result.m_digit.back() == 0)
+			result.m_digit.pop_back();
 
 		if (result.m_digit.size() == 1 && result.m_digit[0] == 0)
 			result.m_isNegative = false;
@@ -188,13 +220,13 @@ namespace bigint
 
 	BigInteger BigInteger::operator/(const BigInteger& _other) const
 	{
-		// 0ìœ¼ë¡œ ë‚˜ëˆ„ê¸°
+		// 0À¸·Î ³ª´©±â
 		if (_other.m_digit.size() == 1 && _other.m_digit[0] == 0)
 		{
 			throw std::runtime_error("Division by zero");
 		}
 
-		// ì ˆëŒ“ê°’ ë²„ì „ ì¤€ë¹„
+		// Àı´ñ°ª ¹öÀü ÁØºñ
 		BigInteger absA = *this;
 		absA.m_isNegative = false;
 
@@ -205,10 +237,10 @@ namespace bigint
 		BigInteger remainder;
 		DivModAbs(absA, absB, quotient, remainder);
 
-		// ë¶€í˜¸ = ì„œë¡œ ë‹¤ë¥¸ ë¶€í˜¸ë©´ ìŒìˆ˜
+		// ºÎÈ£ = ¼­·Î ´Ù¸¥ ºÎÈ£¸é À½¼ö
 		quotient.m_isNegative = (m_isNegative != _other.m_isNegative);
 
-		// ëª«ì´ 0ì´ë©´ ë¶€í˜¸ëŠ” í•­ìƒ ì–‘ìˆ˜ë¡œ
+		// ¸òÀÌ 0ÀÌ¸é ºÎÈ£´Â Ç×»ó ¾ç¼ö·Î
 		if (quotient.m_digit.size() == 1 && quotient.m_digit[0] == 0)
 			quotient.m_isNegative = false;
 
@@ -217,13 +249,13 @@ namespace bigint
 
 	BigInteger BigInteger::operator%(const BigInteger& _other) const
 	{
-		// 0ìœ¼ë¡œ ë‚˜ëˆ„ê¸°
+		// 0À¸·Î ³ª´©±â
 		if (_other.m_digit.size() == 1 && _other.m_digit[0] == 0)
 		{
 			throw std::runtime_error("Division by zero");
 		}
 
-		// ì ˆëŒ“ê°’ ë²„ì „ ì¤€ë¹„
+		// Àı´ñ°ª ¹öÀü ÁØºñ
 		BigInteger absA = *this;
 		absA.m_isNegative = false;
 
@@ -234,11 +266,11 @@ namespace bigint
 		BigInteger remainder;
 		DivModAbs(absA, absB, quotient, remainder);
 
-		// C/C++ ê¸°ë³¸ ì •ìˆ˜ì™€ ë™ì¼í•˜ê²Œ:
-		//   a % b ì˜ ë¶€í˜¸ëŠ” í•­ìƒ a ì™€ ê°™ìŒ
+		// C/C++ ±âº» Á¤¼ö¿Í µ¿ÀÏÇÏ°Ô:
+		//   a % b ÀÇ ºÎÈ£´Â Ç×»ó a ¿Í °°À½
 		remainder.m_isNegative = m_isNegative;
 
-		// ë‚˜ë¨¸ì§€ê°€ 0ì´ë©´ ë¶€í˜¸ëŠ” ì–‘ìˆ˜ë¡œ ì •ë¦¬
+		// ³ª¸ÓÁö°¡ 0ÀÌ¸é ºÎÈ£´Â ¾ç¼ö·Î Á¤¸®
 		if (remainder.m_digit.size() == 1 && remainder.m_digit[0] == 0)
 			remainder.m_isNegative = false;
 
@@ -370,9 +402,9 @@ namespace bigint
 		if (m_digit.size() == 1 && m_digit[0] == 0)
 			return 0;
 
-		// ìë£Œí˜• ë‚´ì— ë“¤ì–´ì˜¤ëŠ”ì§€ ê²€ì‚¬
-		//	ìŒìˆ˜ì˜ ê²½ìš° LLONG_MAX + 1 ê¹Œì§€ (LLONG_MIN)
-		//	ì–‘ìˆ˜ì˜ ê²½ìš° LLONG_MAX ê¹Œì§€
+		// ÀÚ·áÇü ³»¿¡ µé¾î¿À´ÂÁö °Ë»ç
+		//	À½¼öÀÇ °æ¿ì LLONG_MAX + 1 ±îÁö (LLONG_MIN)
+		//	¾ç¼öÀÇ °æ¿ì LLONG_MAX ±îÁö
 		constexpr unsigned long long ulimit = std::numeric_limits<long long>::max();
 		unsigned long long limit = m_isNegative ? (ulimit + 1) : ulimit;
 		unsigned long long value = 0;
@@ -381,22 +413,22 @@ namespace bigint
 		{
 			unsigned int digit = static_cast<unsigned int>(m_digit[i]);
 
-			// Normalizeê°€ ì—ëŸ¬ê°€ ë°œìƒí•œ ê²½ìš° ë°©ì–´ ë™ì‘ ë„£ê¸°
+			// Normalize°¡ ¿¡·¯°¡ ¹ß»ıÇÑ °æ¿ì ¹æ¾î µ¿ÀÛ ³Ö±â
 			if (digit > static_cast<unsigned int>(m_base))
 				throw std::logic_error("BigInteger: invalid digit state");
 
-			// valueì— ê°’ ë„£ê¸° ì „ í…ŒìŠ¤íŠ¸
+			// value¿¡ °ª ³Ö±â Àü Å×½ºÆ®
 			if (value > (limit - digit) / static_cast<unsigned long long>(m_base))
 				throw std::overflow_error("BigInteger: value exceeds long long range");
 
 			value = value * static_cast<unsigned long long>(m_base) + digit;
 		}
 
-		// ì–‘ìˆ˜ì˜ ê²½ìš°
+		// ¾ç¼öÀÇ °æ¿ì
 		if (!m_isNegative)
 			return static_cast<long long>(value);
 
-		// ìŒìˆ˜ min ê°’ ì²˜ë¦¬
+		// À½¼ö min °ª Ã³¸®
 		if (value == ulimit + 1)
 			return std::numeric_limits<long long>::min();
 
@@ -436,14 +468,108 @@ namespace bigint
 		return result;
 	}
 
-	bool BigInteger::IsZero() noexcept
+	bool BigInteger::IsZero() const noexcept
 	{
 		return m_digit.size() == 1 && m_digit[0] == 0;
 	}
 
-	bool BigInteger::IsNegative() noexcept
+	bool BigInteger::IsNegative() const noexcept
 	{
 		return m_isNegative;
+	}
+
+	BigInteger BigInteger::Pow(BigInteger _base, unsigned long long _exp)
+	{
+		BigInteger result(1);
+		while (_exp > 0)
+		{
+			if ((_exp & 1) != 0)
+				result = result * _base;
+			
+			_exp >>= 1;
+			if (_exp > 0)
+				_base = _base * _base;
+		}
+
+		return result;
+	}
+
+	BigInteger BigInteger::ModPow(BigInteger _base, BigInteger _exp, const BigInteger& _mod)
+	{
+		if (_mod.IsZero())
+		{
+			throw std::invalid_argument("BigInteger: modulus is zero");
+		}
+		if (_mod.IsNegative())
+		{
+			throw std::invalid_argument("BigInteger: modulus must be positive");
+		}
+		if (_exp.IsNegative())
+		{
+			throw std::invalid_argument("BigInteger: negative exponent is not supported");
+		}
+
+		BigInteger result(1);
+		
+		// base ¹üÀ§ Á¤±ÔÈ­
+		_base = _base % _mod;
+		if (_base.IsNegative())
+			_base = _base + _mod;
+
+		// Áö¼ö°¡ 0ÀÏ½Ã 1 ¹İÈ¯
+		if (_exp.IsZero())
+			return result;
+
+		while (_exp > 0)
+		{
+			BigInteger bit = _exp % 2;
+			if (bit == 1)
+				result = (result * _base) % _mod;
+
+			_exp = _exp / 2;
+
+			if (_exp > 0)
+				_base = (_base * _base) % _mod;
+		}
+
+		// mod·Î ±¸ÇÑ ÃÖÁ¾°ªÀÌ À½¼öÀÎ °æ¿ì mod ¿¬»ê
+		if (result.IsNegative())
+			result = result + _mod;
+
+		return result;
+	}
+
+	BigInteger BigInteger::Gcd(BigInteger _a, BigInteger _b)
+	{
+		// µÑ Áß ÇÏ³ª°¡ 0ÀÌ¶ó¸é ±¸ÇÒ ÇÊ¿ä ¾øÀ½.
+		if (_a.IsZero()) return _b.Abs();
+		if (_b.IsZero()) return _a.Abs();
+
+		// ºÎÈ£ Á¦°Å
+		_a.m_isNegative = false;
+		_b.m_isNegative = false;
+
+		while (_b > 0)
+		{
+			BigInteger r = _a % _b;
+			_a = _b;
+			_b = r;
+		}
+		return _a;
+	}
+
+	BigInteger BigInteger::Lcm(BigInteger _a, BigInteger _b)
+	{
+		if (_a.IsZero() || _b.IsZero())
+			return BigInteger(0);
+
+		BigInteger gcd = Gcd(_a, _b);
+		BigInteger absA = _a.Abs();
+		BigInteger absB = _b.Abs();
+		
+		BigInteger result = absA * absB / gcd;
+
+		return result;
 	}
 
 	void BigInteger::MakeDigit(std::string _data)
@@ -541,35 +667,35 @@ namespace bigint
 		if (m_digit.size() > _other.m_digit.size()) return 1;
 		if (m_digit.size() < _other.m_digit.size()) return -1;
 
-		// í¬ê¸°ê°€ ê°™ì„ ë•Œ ì‚¬ì´ì¦ˆ ë¹„êµ ë„£ê¸°
+		// Å©±â°¡ °°À» ¶§ »çÀÌÁî ºñ±³ ³Ö±â
 		for (int i = static_cast<int>(m_digit.size()) - 1; i >= 0; i--)
 		{
 			if (m_digit[i] > _other.m_digit[i]) return 1;
 			if (m_digit[i] < _other.m_digit[i]) return -1;
 		}
 
-		// ì™„ì „ ë™ì¼
+		// ¿ÏÀü µ¿ÀÏ
 		return 0;
 	}
 
 	int BigInteger::Compare(const BigInteger& _other) const
 	{
-		// ë¶€í˜¸ê°€ ë‹¤ë¥¸ ê²½ìš° ìŒìˆ˜ê°€ ë” ì ë‹¤
+		// ºÎÈ£°¡ ´Ù¸¥ °æ¿ì À½¼ö°¡ ´õ Àû´Ù
 		if (m_isNegative != _other.m_isNegative)
 		{
 			return m_isNegative ? -1 : 1;
 		}
 
-		// ë‘˜ ë‹¤ ì–‘ìˆ˜ê±°ë‚˜ ìŒìˆ˜
+		// µÑ ´Ù ¾ç¼ö°Å³ª À½¼ö
 		int cmp = CompareAbs(_other);
 		if (!m_isNegative)
 		{
-			// ë‘˜ ë‹¤ ì–‘ìˆ˜ë¼ë©´ ê·¸ëŒ€ë¡œ
+			// µÑ ´Ù ¾ç¼ö¶ó¸é ±×´ë·Î
 			return cmp;
 		}
 		else
 		{
-			// ë‘˜ ë‹¤ ìŒìˆ˜ë¼ë©´ ë°˜ëŒ€ë¡œ -> |a| < |b| ë¼ë©´ a > b
+			// µÑ ´Ù À½¼ö¶ó¸é ¹İ´ë·Î -> |a| < |b| ¶ó¸é a > b
 			return -cmp;
 		}
 	}
@@ -581,7 +707,7 @@ namespace bigint
 		size_t maxSize = std::max(_a.m_digit.size(), _b.m_digit.size());
 		ll carry = 0;
 
-		// ë‘ ìˆ˜ì˜ ìµœëŒ€ ì‚¬ì´ì¦ˆë¥¼ ë¹„êµí•œ ë’¤, ê° í•­ëª©ì—ì„œ ë”í•˜ê¸°.
+		// µÎ ¼öÀÇ ÃÖ´ë »çÀÌÁî¸¦ ºñ±³ÇÑ µÚ, °¢ Ç×¸ñ¿¡¼­ ´õÇÏ±â.
 		for (size_t i = 0; i < maxSize; i++)
 		{
 			ll value = carry;
@@ -595,7 +721,7 @@ namespace bigint
 		if (carry > 0)
 			result.m_digit.push_back((int)carry);
 
-		// 0 ì •ë¦¬
+		// 0 Á¤¸®
 		result.Normalize();
 		return result;
 	}
@@ -621,7 +747,7 @@ namespace bigint
 			result.m_digit.push_back((int)value);
 		}
 
-		// 0 ì •ë¦¬
+		// 0 Á¤¸®
 		result.Normalize();
 		return result;
 	}
@@ -630,7 +756,7 @@ namespace bigint
 	{
 		BigInteger result;
 
-		// ê³±í•˜ëŠ” ìˆ˜ê°€ 0ì¼ì‹œ, ì´ˆê¸°ê°’ 0ì„ ë°˜í™˜
+		// °öÇÏ´Â ¼ö°¡ 0ÀÏ½Ã, ÃÊ±â°ª 0À» ¹İÈ¯
 		if (_factor == 0) return result;
 
 		result.m_digit.clear();
@@ -653,17 +779,17 @@ namespace bigint
 		return result;
 	}
 
-	// í•­ìƒ ì–‘ìˆ˜ë§Œ ë°›ìŒ
+	// Ç×»ó ¾ç¼ö¸¸ ¹ŞÀ½
 	void BigInteger::DivModAbs(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder)
 	{
-		// 0ìœ¼ë¡œ ë‚˜ëˆ„ê¸° ì²´í¬ (ì•ˆì „ìš©, ë³´í†µ operator/ì—ì„œ ë¨¼ì € ì²´í¬)
+		// 0À¸·Î ³ª´©±â Ã¼Å© (¾ÈÀü¿ë, º¸Åë operator/¿¡¼­ ¸ÕÀú Ã¼Å©)
 		if (_b.m_digit.size() == 1 && _b.m_digit[0] == 0)
 		{
 			throw std::runtime_error("Division by zero");
 		}
 
 		int cmp = _a.CompareAbs(_b);
-		// |a| < |b| ëª« = 0, ë‚˜ë¨¸ì§€ = a
+		// |a| < |b| ¸ò = 0, ³ª¸ÓÁö = a
 		if (cmp < 0)
 		{
 			_quotient.m_digit.clear();
@@ -674,7 +800,7 @@ namespace bigint
 			_remainder.m_isNegative = false;
 			return;
 		}
-		// |a| = |b| ëª« = 1, ë‚˜ë¨¸ì§€ = 0
+		// |a| = |b| ¸ò = 1, ³ª¸ÓÁö = 0
 		if (cmp == 0)
 		{
 			_quotient.m_digit.clear();
@@ -710,11 +836,11 @@ namespace bigint
 			shiftedDivisor.m_isNegative = false;
 			shiftedDivisor.Normalize();
 
-			// remainderê°€ ì´ ë§Œí¼ë„ ì•ˆë˜ë©´ ì´ ìë¦¿ìˆ˜ì˜ ëª«ì€ 0
+			// remainder°¡ ÀÌ ¸¸Å­µµ ¾ÈµÇ¸é ÀÌ ÀÚ¸´¼öÀÇ ¸òÀº 0
 			if (_remainder.CompareAbs(shiftedDivisor) < 0)
 				continue;
 
-			// quotient digit âˆˆ [1, m_base-1] ì´ì§„íƒìƒ‰
+			// quotient digit ¡ô [1, m_base-1] ÀÌÁøÅ½»ö
 			int low = 1;
 			int high = m_base - 1;
 			int best = 0;
@@ -727,19 +853,19 @@ namespace bigint
 
 				if (comp <= 0)
 				{
-					best = mid;       // ì•„ì§ remainderë³´ë‹¤ ì‘ê±°ë‚˜ ê°™ìŒ â†’ ë” í‚¤ìš¸ ìˆ˜ ìˆìŒ
+					best = mid;       // ¾ÆÁ÷ remainderº¸´Ù ÀÛ°Å³ª °°À½ ¡æ ´õ Å°¿ï ¼ö ÀÖÀ½
 					low = mid + 1;
 				}
 				else
 				{
-					high = mid - 1;   // ë„ˆë¬´ í¼ â†’ ì¤„ì´ê¸°
+					high = mid - 1;   // ³Ê¹« Å­ ¡æ ÁÙÀÌ±â
 				}
 			}
 
 			if (best > 0)
 			{
 				BigInteger sub = MulSmall(shiftedDivisor, best);
-				_remainder = SubAbs(_remainder, sub);   // |remainder| >= |sub| ë³´ì¥
+				_remainder = SubAbs(_remainder, sub);   // |remainder| >= |sub| º¸Àå
 				_remainder.m_isNegative = false;
 				_quotient.m_digit[shift] = best;
 			}
