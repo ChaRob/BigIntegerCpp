@@ -24,9 +24,10 @@ C++로 구현된 임의 정밀도 정수(Big Integer) 연산 라이브러리입�
 - 증감, 대입 연산자 ( `+=`, `-=`, `++`, `--`, `=`)
 - string 및 int, long long 변환 함수 제공
 - 내부 구조  
-  - base = 10^4
+  - base = 10^9
   - little-endian vector 저장 방식
 - 10^100 까지 연산속도 보장
+- BigInteger 용 수학 함수 (Pow, ModPow, Gcd, Lcm)
 - Windows / x64 / MSVC Release 빌드
 
 ---
