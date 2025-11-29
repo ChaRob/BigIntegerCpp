@@ -25,8 +25,8 @@ namespace bigint
 
 		// 공용 멤버 변수 정릐
 	private:
-		static const int m_base = 10000;	// 기수, 항상 10의 제곱으로 표현되야함
-		static const int m_chunk = 4;		// 기수에 따른 사이즈
+		static const int m_base = 1e9;	// 기수, 항상 10의 제곱으로 표현되야함
+		static const int m_chunk = 9;	// 기수에 따른 사이즈
 
 		// 클래스 멤버 변수 정의
 	private:

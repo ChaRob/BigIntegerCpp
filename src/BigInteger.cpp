@@ -155,6 +155,29 @@ namespace bigint
 	BigInteger BigInteger::operator*(const BigInteger& _other) const
 	{
 		BigInteger result;
+
+		// 0 체크
+		if ((m_digit.size() == 1 && m_digit[0] == 0) ||
+			(_other.m_digit.size() == 1 && _other.m_digit[0] == 0))
+		{
+			// 초기 result = 0
+			return result;
+		}
+
+		// 만약 m_base보다 작다면 MulSmall로 로직 처리
+		if (_other.m_digit.size() == 1 || m_digit.size() == 1)
+		{
+			if (_other.m_digit.size() == 1)
+				result = MulSmall(*this, _other.m_digit[0]);
+			else
+				result = MulSmall(_other, m_digit[0]);
+
+			result.m_isNegative = (m_isNegative != _other.m_isNegative);
+			if (result.m_digit.size() == 1 && result.m_digit[0] == 0)
+				result.m_isNegative = false;
+			return result;
+		}
+
 		// XOR 연산으로 부호 처리
 		result.m_isNegative = (m_isNegative != _other.m_isNegative);
 
@@ -174,11 +197,20 @@ namespace bigint
 				carry = value / m_base;
 			}
 
-			// 마지막 자리의 carry는 고정된 위치에만 더함
-			result.m_digit[i + _other.m_digit.size()] += (int)carry;
+			int pos = i + _other.m_digit.size();
+			while (carry > 0)
+			{
+				ll value = result.m_digit[pos] + carry;
+
+				result.m_digit[pos] = value % m_base;
+				carry = value / m_base;
+				pos++;
+			}
 		}
 
-		result.Normalize();
+		// 최상위 0 제거
+		while (result.m_digit.size() > 1 && result.m_digit.back() == 0)
+			result.m_digit.pop_back();
 
 		if (result.m_digit.size() == 1 && result.m_digit[0] == 0)
 			result.m_isNegative = false;
