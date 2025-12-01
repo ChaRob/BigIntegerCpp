@@ -28,6 +28,7 @@ C++로 구현된 임의 정밀도 정수(Big Integer) 연산 라이브러리입�
   - little-endian vector 저장 방식
 - 10^100 까지 연산속도 보장
 - BigInteger 용 수학 함수 (Pow, ModPow, Gcd, Lcm)
+- 곱셈 연산 Karatsuba 방식 적용
 - Windows / x64 / MSVC Release 빌드
 
 ---
@@ -69,8 +70,8 @@ int main()
 ## 🔌 Usage Notes
 
 - namespace bigint를 지정하여 사용하여 주십시오.
-- 내부 기수(base)는 10^4이며 정수는 vector<int>로 저장됩니다.
-- 연산 속도는 기수 변경과 알고리즘 개선을 통해 향후 더 최적화될 예정입니다.
-- Karatsuba, FFT 기반 곱셈, 모듈러 연산 확장 등이 업데이트될 수 있습니다.
+- 내부 기수(base)는 10^9이며 정수는 vector<int>로 저장됩니다.
+- int, long long과의 연산을 지원하지만 float, double과는 사용하지 않는 것을 권장합니다.
+- FFT 기반 곱셈이 업데이트될 예정입니다.
 
 ---

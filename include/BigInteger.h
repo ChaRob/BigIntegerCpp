@@ -25,8 +25,8 @@ namespace bigint
 
 		// 공용 멤버 변수 정릐
 	private:
-		static const int m_base = 1e9;	// 기수, 항상 10의 제곱으로 표현되야함
-		static const int m_chunk = 9;	// 기수에 따른 사이즈
+		static const int m_base = 1000000000;	// 기수, 항상 10의 제곱으로 표현되야함
+		static const int m_chunk = 9;			// 기수에 따른 사이즈
 
 		// 클래스 멤버 변수 정의
 	private:
@@ -92,5 +92,12 @@ namespace bigint
 		static BigInteger SubAbs(const BigInteger& _a, const BigInteger& _b); // |a| > |b| 가정
 		static BigInteger MulSmall(const BigInteger& _a, int _factor);
 		static void DivModAbs(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder);
+
+		// Karatsuba 사용 임계 길이, 해당 블록 수 넘을 시 사용
+		static const int m_karatsubaThreshold = 128;
+
+		// 곱셈 헬퍼
+		static BigInteger MulOrigin(const BigInteger& _a, const BigInteger& _b);
+		static BigInteger MulKaratsuba(const BigInteger& _a, const BigInteger& _b);
 	};
 }

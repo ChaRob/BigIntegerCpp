@@ -178,40 +178,18 @@ namespace bigint
 			return result;
 		}
 
+		// Karatsuba 적용
+		BigInteger absA = *this;
+		BigInteger absB = _other;
+		absA.m_isNegative = false;
+		absB.m_isNegative = false;
+
+		result = MulKaratsuba(absA, absB);
+
 		// XOR 연산으로 부호 처리
 		result.m_isNegative = (m_isNegative != _other.m_isNegative);
 
-		// 자릿수 미리 확보
-		result.m_digit.assign(m_digit.size() + _other.m_digit.size(), 0);
-		for (size_t i = 0; i < m_digit.size(); i++)
-		{
-			ll carry = 0;
-
-			for (size_t j = 0; j < _other.m_digit.size(); j++)
-			{
-				ll value = result.m_digit[i + j]
-					+ (ll)m_digit[i] * _other.m_digit[j]
-					+ carry;
-
-				result.m_digit[i + j] = value % m_base;
-				carry = value / m_base;
-			}
-
-			int pos = i + _other.m_digit.size();
-			while (carry > 0)
-			{
-				ll value = result.m_digit[pos] + carry;
-
-				result.m_digit[pos] = value % m_base;
-				carry = value / m_base;
-				pos++;
-			}
-		}
-
-		// 최상위 0 제거
-		while (result.m_digit.size() > 1 && result.m_digit.back() == 0)
-			result.m_digit.pop_back();
-
+		// 결과가 0이면 양수처리
 		if (result.m_digit.size() == 1 && result.m_digit[0] == 0)
 			result.m_isNegative = false;
 
@@ -873,5 +851,129 @@ namespace bigint
 
 		_quotient.Normalize();
 		_remainder.Normalize();
+	}
+
+	BigInteger BigInteger::MulOrigin(const BigInteger& _a, const BigInteger& _b)
+	{
+		BigInteger result;
+
+		// 0 체크
+		if ((_a.m_digit.size() == 1 && _a.m_digit[0] == 0) ||
+			(_b.m_digit.size() == 1 && _b.m_digit[0] == 0))
+		{
+			// 초기 result = 0
+			return result;
+		}
+
+		// 양수로 고정하고 연산
+		result.m_isNegative = false;
+
+		// 자릿수 미리 확보
+		result.m_digit.assign(_a.m_digit.size() + _b.m_digit.size(), 0);
+
+		for (size_t i = 0; i < _a.m_digit.size(); i++)
+		{
+			ll carry = 0;
+
+			for (size_t j = 0; j < _b.m_digit.size(); j++)
+			{
+				ll value = result.m_digit[i + j]
+					+ (ll)_a.m_digit[i] * _b.m_digit[j]
+					+ carry;
+
+				result.m_digit[i + j] = value % m_base;
+				carry = value / m_base;
+			}
+
+			size_t pos = i + _b.m_digit.size();
+			while (carry > 0)
+			{
+				ll value = result.m_digit[pos] + carry;
+
+				result.m_digit[pos] = value % m_base;
+				carry = value / m_base;
+				pos++;
+
+				if (pos >= result.m_digit.size())
+					result.m_digit.push_back(0);
+			}
+		}
+
+		// 최상위 0 제거
+		while (result.m_digit.size() > 1 && result.m_digit.back() == 0)
+			result.m_digit.pop_back();
+
+		return result;
+	}
+
+	BigInteger BigInteger::MulKaratsuba(const BigInteger& _a, const BigInteger& _b)
+	{
+		size_t aSize = _a.m_digit.size();
+		size_t bSize = _b.m_digit.size();
+		size_t n = std::max(aSize, bSize);
+		if (n <= m_karatsubaThreshold)
+			return MulOrigin(_a, _b);
+
+		size_t half = n / 2;
+
+		BigInteger aLow, aHigh, bLow, bHigh;
+
+		// 하위 half 블록과 나머지로 분리
+		size_t aLowSize = std::min(aSize, half);
+		if (aLowSize > 0)
+		{
+			aLow.m_digit.assign(_a.m_digit.begin(), _a.m_digit.begin() + aLowSize);
+		}
+		else
+		{
+			aLow.m_digit.clear();
+			aLow.m_digit.push_back(0);
+		}
+		aLow.m_isNegative = false;
+
+		if (aSize > half)
+			aHigh.m_digit.assign(_a.m_digit.begin() + half, _a.m_digit.end());
+
+		size_t bLowSize = std::min(bSize, half);
+		if (bLowSize > 0)
+		{
+			bLow.m_digit.assign(_b.m_digit.begin(), _b.m_digit.begin() + bLowSize);
+		}
+		else
+		{
+			bLow.m_digit.clear();
+			bLow.m_digit.push_back(0);
+		}
+		bLow.m_isNegative = false;
+
+		if (bSize > half)
+			bHigh.m_digit.assign(_b.m_digit.begin() + half, _b.m_digit.end());
+
+		// Karatsuba = z0 + z1 + z2
+		// z0 = aLow * bLow
+		BigInteger z0 = MulKaratsuba(aLow, bLow);
+
+		// z2 = aHigh * bHigh
+		BigInteger z2 = MulKaratsuba(aHigh, bHigh);
+
+		// z1 = (aLow + bHigh) * (aHigh + bLow) - z0 - z2
+		BigInteger z1 = MulKaratsuba(aLow + bHigh, aHigh + bLow) - z0 - z2;
+
+		BigInteger result;
+		result.m_isNegative = false;
+		result.m_digit.assign(2 * n + 2, 0);
+
+		for (int i = 0; i < z0.m_digit.size(); i++)
+			result.m_digit[i] += z0.m_digit[i];
+
+		for (int i = 0; i < z1.m_digit.size(); i++)
+			result.m_digit[i + half] += z1.m_digit[i];
+
+		for (int i = 0; i < z2.m_digit.size(); i++)
+			result.m_digit[i + 2 * half] += z2.m_digit[i];
+
+		// 각 자리값 정리
+		result.Normalize();
+		return result;
 	}
 }
