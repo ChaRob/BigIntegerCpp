@@ -791,6 +791,13 @@ namespace bigint
 			return;
 		}
 
+		// 사이즈에 따라서 더 최적화된 알고리즘 선택
+		if (_b.m_digit.size() >= m_knuthThreshold)
+		{
+			DivModAbsKnuth(_a, _b, _quotient, _remainder);
+			return;
+		}
+
 		_remainder = _a;
 		_remainder.m_isNegative = false;
 
@@ -848,6 +855,177 @@ namespace bigint
 				_quotient.m_digit[shift] = best;
 			}
 		}
+
+		_quotient.Normalize();
+		_remainder.Normalize();
+	}
+
+	void BigInteger::DivModAbsKnuth(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder)
+	{
+		// big-endian 처리
+		int n = _a.m_digit.size();
+		int m = _b.m_digit.size();
+
+		std::vector<int> u(n);
+		std::vector<int> v(m);
+
+		for (int i = 0; i < n; i++)
+			u[i] = _a.m_digit[n - 1 - i];
+		for (int i = 0; i < m; i++)
+			v[i] = _b.m_digit[m - 1 - i];
+
+		// 2) 정규화: v[0]이 base/2 이상이 되도록 d 곱하기
+		int v0 = v[0];
+		long long d = (long long)m_base / (v0 + 1); // d >= 1
+
+		auto mulVec = [](std::vector<int>& _vec, long long _factor)
+			{
+				long long carry = 0;
+				for (int i = (int)_vec.size() - 1; i >= 0; --i)
+				{
+					long long value = _vec[i] * _factor + carry;
+					_vec[i] = (int)(value % BigInteger::m_base);
+					carry = value / BigInteger::m_base;
+				}
+				if (carry > 0)
+					_vec.insert(_vec.begin(), (int)carry);
+			};
+
+		if (d > 1)
+		{
+			mulVec(u, d);
+			mulVec(v, d);
+			n = (int)u.size();
+			m = (int)v.size();
+		}
+		// u 앞에 0 하나 추가해서 길이 n+1로 맞추기
+		u.insert(u.begin(), 0);
+		++n; // 실제 u 길이
+
+		// 3) 몫 자리 수: n - m + 1
+		int qLen = n - m;
+		std::vector<int> q(qLen, 0);
+
+		// 4) 메인 루프 (Knuth D3 ~ D7)
+		for (int j = 0; j < qLen; ++j)
+		{
+			// u[j], u[j+1], u[j+2], v[0], v[1] 사용
+			long long uj0 = u[j];
+			long long uj1 = u[j + 1];
+			long long uj2 = (j + 2 < (int)u.size()) ? u[j + 2] : 0;
+
+			long long v0l = v[0];
+			long long v1l = (m >= 2) ? v[1] : 0;
+
+			// q?, r? 계산
+			long long dividend = uj0 * m_base + uj1;
+			long long qhat = dividend / v0l;
+			long long rhat = dividend % v0l;
+
+			if (qhat >= m_base)
+			{
+				qhat = m_base - 1;
+				rhat += v0l;
+				if (rhat >= m_base)
+				{
+					// 이 경우는 드묾, 그대로 두면 됨
+				}
+			}
+
+			// qhat 보정
+			while (m >= 2 && qhat * v1l > rhat * m_base + uj2)
+			{
+				--qhat;
+				rhat += v0l;
+				if (rhat >= m_base) break;
+			}
+
+			// 5) u 에서 qhat * v 빼기
+			long long borrow = 0;
+			for (int i = m - 1; i >= 0; --i)
+			{
+				long long p = (long long)v[i] * qhat;
+				long long cur = (long long)u[j + 1 + i] - (p % m_base) - borrow;
+				borrow = p / m_base;
+
+				if (cur < 0)
+				{
+					cur += m_base;
+					++borrow;
+				}
+				u[j + 1 + i] = (int)cur;
+			}
+			long long cur0 = (long long)u[j] - borrow;
+
+			// 음수가 되면 qhat--, 다시 v를 더해 보정
+			if (cur0 < 0)
+			{
+				--qhat;
+				long long carry = 0;
+				for (int i = m - 1; i >= 0; --i)
+				{
+					long long cur = (long long)u[j + 1 + i] + v[i] + carry;
+					if (cur >= m_base)
+					{
+						cur -= m_base;
+						carry = 1;
+					}
+					else
+					{
+						carry = 0;
+					}
+					u[j + 1 + i] = (int)cur;
+				}
+				u[j] = (int)(cur0 + m_base); // borrow 한 번 되돌린 효과
+			}
+			else
+			{
+				u[j] = (int)cur0;
+			}
+
+			q[j] = (int)qhat;
+		}
+
+		// 6) 나머지(정규화 해제) : u의 마지막 m 자리를 d로 나눔
+		std::vector<int> r(m);
+		for (int i = 0; i < m; ++i)
+			r[i] = u[qLen + i]; // u[qLen .. qLen + m - 1]
+
+		if (d > 1)
+		{
+			// r / d 수행 (big-endian)
+			long long carry = 0;
+			for (int i = 0; i < (int)r.size(); ++i)
+			{
+				long long cur = carry * m_base + r[i];
+				r[i] = (int)(cur / d);
+				carry = cur % d;
+			}
+		}
+
+		// 7) 앞쪽 0 제거 (quotient, remainder)
+		auto trimLeading = [](std::vector<int>& _vec)
+			{
+				while (_vec.size() > 1 && _vec[0] == 0)
+					_vec.erase(_vec.begin());
+			};
+		trimLeading(q);
+		trimLeading(r);
+
+		// 8) big-endian → little-endian 변환 후 BigInteger에 저장
+		_quotient.m_digit.clear();
+		for (int i = (int)q.size() - 1; i >= 0; --i)
+			_quotient.m_digit.push_back(q[i]);
+		_quotient.m_isNegative = false;
+		if (_quotient.m_digit.empty())
+			_quotient.m_digit.push_back(0);
+
+		_remainder.m_digit.clear();
+		for (int i = (int)r.size() - 1; i >= 0; --i)
+			_remainder.m_digit.push_back(r[i]);
+		_remainder.m_isNegative = false;
+		if (_remainder.m_digit.empty())
+			_remainder.m_digit.push_back(0);
 
 		_quotient.Normalize();
 		_remainder.Normalize();

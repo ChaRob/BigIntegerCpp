@@ -28,6 +28,12 @@ namespace bigint
 		static const int m_base = 1000000000;	// 기수, 항상 10의 제곱으로 표현되야함
 		static const int m_chunk = 9;			// 기수에 따른 사이즈
 
+		// Karatsuba 사용 임계 길이, 해당 블록 수 넘을 시 사용
+		static const int m_karatsubaThreshold = 128;
+
+		// Knuth 사용 임계 길이
+		static const int m_knuthThreshold = 32;
+
 		// 클래스 멤버 변수 정의
 	private:
 		std::vector<int> m_digit;	// little endian 배열
@@ -92,9 +98,7 @@ namespace bigint
 		static BigInteger SubAbs(const BigInteger& _a, const BigInteger& _b); // |a| > |b| 가정
 		static BigInteger MulSmall(const BigInteger& _a, int _factor);
 		static void DivModAbs(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder);
-
-		// Karatsuba 사용 임계 길이, 해당 블록 수 넘을 시 사용
-		static const int m_karatsubaThreshold = 128;
+		static void DivModAbsKnuth(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder);	// Knuth style
 
 		// 곱셈 헬퍼
 		static BigInteger MulOrigin(const BigInteger& _a, const BigInteger& _b);
