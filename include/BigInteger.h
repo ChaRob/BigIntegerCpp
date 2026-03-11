@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <iosfwd>
+#include <random>
 
 namespace bigint
 {
@@ -85,6 +86,9 @@ namespace bigint
 		static BigInteger ModPow(BigInteger _base, BigInteger _exp, const BigInteger& _mod);	// 모듈러 거듭제곱
 		static BigInteger Gcd(BigInteger _a, BigInteger _b);									// 최대공약수
 		static BigInteger Lcm(BigInteger _a, BigInteger _b);									// 최소공배수
+
+		static BigInteger Random(int _digits, bool _allowNegative);	// 10진수 기준 자리수 및 음수 포함 여부
+		static BigInteger RandomInRange(const BigInteger& _min, const BigInteger& _max);
 		
 		// 내부 멤버 함수 정의
 	private:
@@ -103,5 +107,13 @@ namespace bigint
 		// 곱셈 헬퍼
 		static BigInteger MulOrigin(const BigInteger& _a, const BigInteger& _b);
 		static BigInteger MulKaratsuba(const BigInteger& _a, const BigInteger& _b);
+
+		// 랜덤 헬퍼
+		inline static std::mt19937& GetRandomEngine()
+		{
+			static std::mt19937 engine(std::random_device{}());
+			return engine;
+		}
+		static BigInteger RandomOffset(const BigInteger& _upper);
 	};
 }

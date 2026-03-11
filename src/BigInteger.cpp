@@ -550,6 +550,39 @@ namespace bigint
 		return result;
 	}
 
+	BigInteger BigInteger::Random(int _digits, bool _allowNegative)
+	{
+		std::uniform_int_distribution<int> digitDist(0, 9);
+		std::uniform_int_distribution<int> firstDist(1, 9);
+		std::uniform_int_distribution<int> signDist(0, 1);
+
+		std::string s;
+
+		s += static_cast<char>('0' + firstDist(GetRandomEngine()));	// 첫자리
+		for (int i = 1; i < _digits; i++)
+			s += static_cast<char>('0' + digitDist(GetRandomEngine()));
+		
+		// 음수 포함 여부
+		if (_allowNegative && signDist(GetRandomEngine()))
+			s = "-" + s;
+
+		return BigInteger(s);
+	}
+
+	BigInteger BigInteger::RandomInRange(const BigInteger& _min, const BigInteger& _max)
+	{
+		if (_min > _max)
+			throw std::invalid_argument("BigInteger's RangeInRange: min must be <= max");
+
+		if (_min == _max)
+			return _min;
+
+		BigInteger rangeSize = (_max - _min) + 1;
+		BigInteger offset = RandomOffset(rangeSize);
+
+		return _min + offset;
+	}
+
 	void BigInteger::MakeDigit(std::string _data)
 	{
 		m_digit.clear();
@@ -1134,8 +1167,8 @@ namespace bigint
 		// z2 = aHigh * bHigh
 		BigInteger z2 = MulKaratsuba(aHigh, bHigh);
 
-		// z1 = (aLow + bHigh) * (aHigh + bLow) - z0 - z2
-		BigInteger z1 = MulKaratsuba(aLow + bHigh, aHigh + bLow) - z0 - z2;
+		// z1 = (aLow + aHigh) * (bLow + bHigh) - z0 - z2
+		BigInteger z1 = MulKaratsuba(aLow + aHigh, bLow + bHigh) - z0 - z2;
 
 		BigInteger result;
 		result.m_isNegative = false;
@@ -1153,5 +1186,48 @@ namespace bigint
 		// 각 자리값 정리
 		result.Normalize();
 		return result;
+	}
+
+	BigInteger BigInteger::RandomOffset(const BigInteger& _upper)
+	{
+		if (_upper <= 0)
+			throw std::invalid_argument("BigInteger's RandomOffset: upper is must be positive");
+
+		if (_upper == 1)
+			return 0;
+
+		std::string upperString = _upper.ToString();
+		int maxDigits = static_cast<int>(upperString.size());
+
+		std::uniform_int_distribution<int> lengthDist(1, maxDigits);
+		std::uniform_int_distribution<int> firstDigitDist(1, 9);
+		std::uniform_int_distribution<int> digitDist(0, 9);
+
+		while (true)
+		{
+			int currentDigits = lengthDist(GetRandomEngine());
+
+			std::string randomString;
+			randomString.reserve(currentDigits);
+
+			if (currentDigits == 1)
+			{
+				randomString += static_cast<char>('0' + digitDist(GetRandomEngine()));
+			}
+			// 2자리 수 이상인 경우, 좌측 0 방지
+			else
+			{
+				randomString += static_cast<char>('0' + firstDigitDist(GetRandomEngine()));
+				for (int i = 1; i < currentDigits; i++)
+				{
+					randomString += static_cast<char>('0' + digitDist(GetRandomEngine()));
+				}
+			}
+			
+			BigInteger candidate(randomString);
+
+			if (candidate < _upper)
+				return candidate;
+		}
 	}
 }
