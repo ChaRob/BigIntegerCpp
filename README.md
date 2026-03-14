@@ -1,39 +1,40 @@
-ï»¿# BigInteger (C++ Arbitrary Precision Integer Library)
+# BigInteger (C++ Arbitrary Precision Integer Library)
 
-C++ë¡œ êµ¬í˜„ëœ ì„ì˜ ì •ë°€ë„ ì •ìˆ˜(Big Integer) ì—°ì‚° ë¼ì´ë¸ŒëŸ¬ë¦¬ì…ë‹ˆë‹¤.  
-ê¸°ë³¸ ì •ìˆ˜ íƒ€ì…(`int`, `long long`)ìœ¼ë¡œ í‘œí˜„í•  ìˆ˜ ì—†ëŠ” ë§¤ìš° í° ìˆ˜ë¥¼ ë‹¤ë£¨ê¸° ìœ„í•´ ì„¤ê³„ë˜ì—ˆìŠµë‹ˆë‹¤.
+C++·Î ±¸ÇöµÈ ÀÓÀÇ Á¤¹Ğµµ Á¤¼ö(Big Integer) ¿¬»ê ¶óÀÌºê·¯¸®ÀÔ´Ï´Ù.  
+±âº» Á¤¼ö Å¸ÀÔ(`int`, `long long`)À¸·Î Ç¥ÇöÇÒ ¼ö ¾ø´Â ¸Å¿ì Å« ¼ö¸¦ ´Ù·ç±â À§ÇØ ¼³°èµÇ¾ú½À´Ï´Ù.
 
-ë³¸ ë¼ì´ë¸ŒëŸ¬ë¦¬ëŠ” ë‹¤ìŒ ëª©í‘œë¥¼ ê°€ì§€ê³  ë°°í¬ë©ë‹ˆë‹¤.
+º» ¶óÀÌºê·¯¸®´Â ´ÙÀ½ ¸ñÇ¥¸¦ °¡Áö°í ¹èÆ÷µË´Ï´Ù.
 
-- ì§ê´€ì ì¸ ì‚¬ìš© ë°©ì‹ (`BigInteger a("1234")`)
-- C++ ê¸°ë³¸ ì—°ì‚°ì ì—°ë™
-- í° ìˆ˜ ì—°ì‚°ì—ì„œë„ ì•ˆì •ì ì¸ ë™ì‘
-- ì‰½ê²Œ í™•ì¥ ê°€ëŠ¥í•œ êµ¬ì¡°
+- Á÷°üÀûÀÎ »ç¿ë ¹æ½Ä (`BigInteger a("1234")`)
+- C++ ±âº» ¿¬»êÀÚ ¿¬µ¿
+- Å« ¼ö ¿¬»ê¿¡¼­µµ ¾ÈÁ¤ÀûÀÎ µ¿ÀÛ
+- ½±°Ô È®Àå °¡´ÉÇÑ ±¸Á¶
 
 ---
 
-## ğŸ”§ Features
+## ?? Features
 
-í˜„ì¬ ë¼ì´ë¸ŒëŸ¬ë¦¬ê°€ ì œê³µí•˜ëŠ” ê¸°ëŠ¥ì€ ë‹¤ìŒê³¼ ê°™ìŠµë‹ˆë‹¤.
+ÇöÀç ¶óÀÌºê·¯¸®°¡ Á¦°øÇÏ´Â ±â´ÉÀº ´ÙÀ½°ú °°½À´Ï´Ù.
 
-- ë¬¸ìì—´ ê¸°ë°˜ ìƒì„±ì (`BigInteger("12345678901234567890")`)
-- ì‚¬ì¹™ì—°ì‚° ( `+`, `-`, `*`, `/`, `%` )
-- ë¹„êµ ì—°ì‚° ( `==`, `!=`, `<`, `<=`, `>`, `>=` )
-- ë¶€í˜¸ íŒë³„
-- ìŠ¤íŠ¸ë¦¼ ì—°ì‚°ì ( `<<`, `>>` )
-- ì¦ê°, ëŒ€ì… ì—°ì‚°ì ( `+=`, `-=`, `++`, `--`, `=`)
-- string ë° int, long long ë³€í™˜ í•¨ìˆ˜ ì œê³µ
-- ë‚´ë¶€ êµ¬ì¡°  
+- ¹®ÀÚ¿­ ±â¹İ »ı¼ºÀÚ (`BigInteger("12345678901234567890")`)
+- »çÄ¢¿¬»ê ( `+`, `-`, `*`, `/`, `%` )
+- ºñ±³ ¿¬»ê ( `==`, `!=`, `<`, `<=`, `>`, `>=` )
+- ºÎÈ£ ÆÇº°
+- ½ºÆ®¸² ¿¬»êÀÚ ( `<<`, `>>` )
+- Áõ°¨, ´ëÀÔ ¿¬»êÀÚ ( `+=`, `-=`, `++`, `--`, `=`)
+- string ¹× int, long long º¯È¯ ÇÔ¼ö Á¦°ø
+- ³»ºÎ ±¸Á¶  
   - base = 10^9
-  - little-endian vector ì €ì¥ ë°©ì‹
-- 10^100 ê¹Œì§€ ì—°ì‚°ì†ë„ ë³´ì¥
-- BigInteger ìš© ìˆ˜í•™ í•¨ìˆ˜ (Pow, ModPow, Gcd, Lcm)
-- ê³±ì…ˆ ì—°ì‚° Karatsuba ë°©ì‹ ì ìš©
-- Windows / x64 / MSVC Release ë¹Œë“œ
+  - little-endian vector ÀúÀå ¹æ½Ä
+- 10^100 ±îÁö ¿¬»ê¼Óµµ º¸Àå
+- BigInteger ¿ë ¼öÇĞ ÇÔ¼ö (Pow, ModPow, Gcd, Lcm)
+- °ö¼À ¿¬»ê Karatsuba ¹æ½Ä Àû¿ë
+- Windows / x64 / MSVC Release ºôµå
+- Division ½Ã Knuth ¾Ë°í¸®ÁòÀº ±¸ÇöµÇ¾î ÀÖÀ¸³ª ºñÈ°¼ºÈ­µÊ.
 
 ---
 
-## ğŸ“˜ Example
+## ?? Example
 
 ```cpp
 #include "BigInteger.h"
@@ -55,23 +56,99 @@ int main()
 ```
 
 ---
+## ?? Benchmark
 
-## ğŸ—ï¸ How to Build
+### Test Environment
 
-â— í˜„ì¬ ë²„ì „ì€ Window x64 MSVC Release ë¹Œë“œì—ì„œë§Œ ì‚¬ìš© ê°€ëŠ¥í•©ë‹ˆë‹¤. ì¶”í›„ í™•ì¥ ì˜ˆì •ì…ë‹ˆë‹¤.
+```Text
+Compiler : MSVC (Visual Studio)
+Build    : Release x64
+Optimization : /O2
+Base : 10^9
+Karatsuba : Enabled
+Knuth Division : Disabled
+```
 
-1. Static Library (BigInteger.lib)ì™€ Header (BigInteger.h) íŒŒì¼ì„ ë‹¤ìš´ë¡œë“œ í•©ë‹ˆë‹¤.
-2. BigIntegerë¥¼ ì‚¬ìš©í•˜ë ¤ëŠ” C++ í”„ë¡œì íŠ¸ì—ì„œ ë‹¤ìŒê³¼ ê°™ì´ ì„¤ì •í•©ë‹ˆë‹¤.
-    - include ê²½ë¡œì— BigInteger.h ê°€ ìˆëŠ” í´ë” ì¶”ê°€
-    - ë§ì»¤ ì…ë ¥ì— Libraryë¥¼ ì¶”ê°€
+¸ğµç Å×½ºÆ®´Â ·£´ı BigInteger¸¦ »ç¿ëÇÏ¿© ¼öÇà
+
+### Arithmetic Benchmark
+
+#### Addition / Subtraction
+
+| Digits | Add    | Sub    |
+| ------ | ------ | ------ |
+| 100    | < 1 ms | < 1 ms |
+| 1,000  | < 1 ms | < 1 ms |
+| 10,000 | < 1 ms | < 1 ms |
+
+#### Multiplication (Karatsuba)
+
+| Digits | Time   |
+| ------ | ------ |
+| 500    | < 1 ms |
+| 1,000  | < 1 ms |
+| 2,000  | < 1 ms |
+| 5,000  | 1 ms   |
+| 10,000 | 5 ms   |
+
+Karatsuba multiplication automatically activates for large numbers.
+
+#### Division
+
+| Dividend / Divisor | Time   |
+| ------------------ | ------ |
+| 200 / 100 digits   | 2 ms   |
+| 300 / 150 digits   | 3 ms   |
+| 500 / 250 digits   | 7 ms   |
+| 1000 / 500 digits  | 22 ms  |
+| 5000 / 2500 digits | 167 ms |
+
+Number Theory Benchmark
+
+#### GCD
+
+| Digits | Time   |
+| ------ | ------ |
+| 100    | 11 ms  |
+| 500    | 111 ms |
+| 1000   | 313 ms |
+
+#### Modular Exponentiation
+
+| Base       | Exp | Mod        | Time   |
+| ---------- | --- | ---------- | ------ |
+| 50 digits  | 20  | 50 digits  | 48 ms  |
+| 100 digits | 30  | 100 digits | 172 ms |
+| 200 digits | 50  | 200 digits | 379 ms |
+
+
+#### Stability Tests
+
+Division stress tests executed successfully.
+
+```
+StressDivTest passed (1000 / 500 digits, 1000 iterations)
+StressDivTest passed (5000 / 2500 digits, 200 iterations)
+```
+
+---
+
+## ??? How to Build
+
+? ÇöÀç ¹öÀüÀº Window x64 MSVC Release ºôµå¿¡¼­¸¸ »ç¿ë °¡´ÉÇÕ´Ï´Ù. ÃßÈÄ È®Àå ¿¹Á¤ÀÔ´Ï´Ù.
+
+1. Static Library (BigInteger.lib)¿Í Header (BigInteger.h) ÆÄÀÏÀ» ´Ù¿î·Îµå ÇÕ´Ï´Ù.
+2. BigInteger¸¦ »ç¿ëÇÏ·Á´Â C++ ÇÁ·ÎÁ§Æ®¿¡¼­ ´ÙÀ½°ú °°ÀÌ ¼³Á¤ÇÕ´Ï´Ù.
+    - include °æ·Î¿¡ BigInteger.h °¡ ÀÖ´Â Æú´õ Ãß°¡
+    - ¸µÄ¿ ÀÔ·Â¿¡ Library¸¦ Ãß°¡
     
 ---
 
-## ğŸ”Œ Usage Notes
+## ?? Usage Notes
 
-- namespace bigintë¥¼ ì§€ì •í•˜ì—¬ ì‚¬ìš©í•˜ì—¬ ì£¼ì‹­ì‹œì˜¤.
-- ë‚´ë¶€ ê¸°ìˆ˜(base)ëŠ” 10^9ì´ë©° ì •ìˆ˜ëŠ” vector<int>ë¡œ ì €ì¥ë©ë‹ˆë‹¤.
-- int, long longê³¼ì˜ ì—°ì‚°ì„ ì§€ì›í•˜ì§€ë§Œ float, doubleê³¼ëŠ” ì‚¬ìš©í•˜ì§€ ì•ŠëŠ” ê²ƒì„ ê¶Œì¥í•©ë‹ˆë‹¤.
-- FFT ê¸°ë°˜ ê³±ì…ˆì´ ì—…ë°ì´íŠ¸ë  ì˜ˆì •ì…ë‹ˆë‹¤.
+- namespace bigint¸¦ ÁöÁ¤ÇÏ¿© »ç¿ëÇÏ¿© ÁÖ½Ê½Ã¿À.
+- ³»ºÎ ±â¼ö(base)´Â 10^9ÀÌ¸ç Á¤¼ö´Â vector<int>·Î ÀúÀåµË´Ï´Ù.
+- int, long long°úÀÇ ¿¬»êÀ» Áö¿øÇÏÁö¸¸ float, double°ú´Â »ç¿ëÇÏÁö ¾Ê´Â °ÍÀ» ±ÇÀåÇÕ´Ï´Ù.
+- FFT ±â¹İ °ö¼ÀÀÌ ¾÷µ¥ÀÌÆ®µÉ ¿¹Á¤ÀÔ´Ï´Ù.
 
 ---
