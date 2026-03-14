@@ -178,40 +178,18 @@ namespace bigint
 			return result;
 		}
 
+		// Karatsuba 적용
+		BigInteger absA = *this;
+		BigInteger absB = _other;
+		absA.m_isNegative = false;
+		absB.m_isNegative = false;
+
+		result = MulKaratsuba(absA, absB);
+
 		// XOR 연산으로 부호 처리
 		result.m_isNegative = (m_isNegative != _other.m_isNegative);
 
-		// 자릿수 미리 확보
-		result.m_digit.assign(m_digit.size() + _other.m_digit.size(), 0);
-		for (size_t i = 0; i < m_digit.size(); i++)
-		{
-			ll carry = 0;
-
-			for (size_t j = 0; j < _other.m_digit.size(); j++)
-			{
-				ll value = result.m_digit[i + j]
-					+ (ll)m_digit[i] * _other.m_digit[j]
-					+ carry;
-
-				result.m_digit[i + j] = value % m_base;
-				carry = value / m_base;
-			}
-
-			int pos = i + _other.m_digit.size();
-			while (carry > 0)
-			{
-				ll value = result.m_digit[pos] + carry;
-
-				result.m_digit[pos] = value % m_base;
-				carry = value / m_base;
-				pos++;
-			}
-		}
-
-		// 최상위 0 제거
-		while (result.m_digit.size() > 1 && result.m_digit.back() == 0)
-			result.m_digit.pop_back();
-
+		// 결과가 0이면 양수처리
 		if (result.m_digit.size() == 1 && result.m_digit[0] == 0)
 			result.m_isNegative = false;
 
@@ -572,6 +550,39 @@ namespace bigint
 		return result;
 	}
 
+	BigInteger BigInteger::Random(int _digits, bool _allowNegative)
+	{
+		std::uniform_int_distribution<int> digitDist(0, 9);
+		std::uniform_int_distribution<int> firstDist(1, 9);
+		std::uniform_int_distribution<int> signDist(0, 1);
+
+		std::string s;
+
+		s += static_cast<char>('0' + firstDist(GetRandomEngine()));	// 첫자리
+		for (int i = 1; i < _digits; i++)
+			s += static_cast<char>('0' + digitDist(GetRandomEngine()));
+		
+		// 음수 포함 여부
+		if (_allowNegative && signDist(GetRandomEngine()))
+			s = "-" + s;
+
+		return BigInteger(s);
+	}
+
+	BigInteger BigInteger::RandomInRange(const BigInteger& _min, const BigInteger& _max)
+	{
+		if (_min > _max)
+			throw std::invalid_argument("BigInteger's RangeInRange: min must be <= max");
+
+		if (_min == _max)
+			return _min;
+
+		BigInteger rangeSize = (_max - _min) + 1;
+		BigInteger offset = RandomOffset(rangeSize);
+
+		return _min + offset;
+	}
+
 	void BigInteger::MakeDigit(std::string _data)
 	{
 		m_digit.clear();
@@ -813,6 +824,14 @@ namespace bigint
 			return;
 		}
 
+		// 사이즈에 따라서 더 최적화된 알고리즘 선택
+		// Note: 현재 값 부정확하여 사용 불가
+		if (_b.m_digit.size() >= m_knuthThreshold)
+		{
+			//DivModAbsKnuth(_a, _b, _quotient, _remainder);
+			//return;
+		}
+
 		_remainder = _a;
 		_remainder.m_isNegative = false;
 
@@ -873,5 +892,345 @@ namespace bigint
 
 		_quotient.Normalize();
 		_remainder.Normalize();
+	}
+
+	// Note: 현재 값 부정확하여 사용 불가
+	void BigInteger::DivModAbsKnuth(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder)
+	{
+		// big-endian 처리
+		int n = _a.m_digit.size();
+		int m = _b.m_digit.size();
+
+		std::vector<int> u(n);
+		std::vector<int> v(m);
+
+		for (int i = 0; i < n; i++)
+			u[i] = _a.m_digit[n - 1 - i];
+		for (int i = 0; i < m; i++)
+			v[i] = _b.m_digit[m - 1 - i];
+
+		// 2) 정규화: v[0]이 base/2 이상이 되도록 d 곱하기
+		int v0 = v[0];
+		long long d = (long long)m_base / (v0 + 1); // d >= 1
+
+		auto mulVec = [](std::vector<int>& _vec, long long _factor)
+			{
+				long long carry = 0;
+				for (int i = (int)_vec.size() - 1; i >= 0; --i)
+				{
+					long long value = _vec[i] * _factor + carry;
+					_vec[i] = (int)(value % BigInteger::m_base);
+					carry = value / BigInteger::m_base;
+				}
+				if (carry > 0)
+					_vec.insert(_vec.begin(), (int)carry);
+			};
+
+		if (d > 1)
+		{
+			mulVec(u, d);
+			mulVec(v, d);
+			n = (int)u.size();
+			m = (int)v.size();
+		}
+		// u 앞에 0 하나 추가해서 길이 n+1로 맞추기
+		u.insert(u.begin(), 0);
+		++n; // 실제 u 길이
+
+		// 3) 몫 자리 수: n - m + 1
+		int qLen = n - m;
+		std::vector<int> q(qLen, 0);
+
+		// 4) 메인 루프 (Knuth D3 ~ D7)
+		for (int j = 0; j < qLen; ++j)
+		{
+			// u[j], u[j+1], u[j+2], v[0], v[1] 사용
+			long long uj0 = u[j];
+			long long uj1 = u[j + 1];
+			long long uj2 = (j + 2 < (int)u.size()) ? u[j + 2] : 0;
+
+			long long v0l = v[0];
+			long long v1l = (m >= 2) ? v[1] : 0;
+
+			// q?, r? 계산
+			long long dividend = uj0 * m_base + uj1;
+			long long qhat = dividend / v0l;
+			long long rhat = dividend % v0l;
+
+			if (qhat >= m_base)
+			{
+				qhat = m_base - 1;
+				rhat += v0l;
+				if (rhat >= m_base)
+				{
+					// 이 경우는 드묾, 그대로 두면 됨
+				}
+			}
+
+			// qhat 보정
+			while (m >= 2 && qhat * v1l > rhat * m_base + uj2)
+			{
+				--qhat;
+				rhat += v0l;
+				if (rhat >= m_base) break;
+			}
+
+			// 5) u 에서 qhat * v 빼기
+			long long borrow = 0;
+			for (int i = m - 1; i >= 0; --i)
+			{
+				long long p = (long long)v[i] * qhat;
+				long long cur = (long long)u[j + 1 + i] - (p % m_base) - borrow;
+				borrow = p / m_base;
+
+				if (cur < 0)
+				{
+					cur += m_base;
+					++borrow;
+				}
+				u[j + 1 + i] = (int)cur;
+			}
+			long long cur0 = (long long)u[j] - borrow;
+
+			// 음수가 되면 qhat--, 다시 v를 더해 보정
+			if (cur0 < 0)
+			{
+				--qhat;
+				long long carry = 0;
+				for (int i = m - 1; i >= 0; --i)
+				{
+					long long cur = (long long)u[j + 1 + i] + v[i] + carry;
+					if (cur >= m_base)
+					{
+						cur -= m_base;
+						carry = 1;
+					}
+					else
+					{
+						carry = 0;
+					}
+					u[j + 1 + i] = (int)cur;
+				}
+				// add-back에서 발생한 carry까지 반영
+				u[j] = (int)(cur0 + carry);
+			}
+			else
+			{
+				u[j] = (int)cur0;
+			}
+
+			q[j] = (int)qhat;
+		}
+
+		// 6) 나머지(정규화 해제) : u의 마지막 m 자리를 d로 나눔
+		std::vector<int> r(m);
+		for (int i = 0; i < m; ++i)
+			r[i] = u[qLen + i]; // u[qLen .. qLen + m - 1]
+
+		if (d > 1)
+		{
+			// r / d 수행 (big-endian)
+			long long carry = 0;
+			for (int i = 0; i < (int)r.size(); ++i)
+			{
+				long long cur = carry * m_base + r[i];
+				r[i] = (int)(cur / d);
+				carry = cur % d;
+			}
+		}
+
+		// 7) 앞쪽 0 제거 (quotient, remainder)
+		auto trimLeading = [](std::vector<int>& _vec)
+			{
+				while (_vec.size() > 1 && _vec[0] == 0)
+					_vec.erase(_vec.begin());
+			};
+		trimLeading(q);
+		trimLeading(r);
+
+		// 8) big-endian → little-endian 변환 후 BigInteger에 저장
+		_quotient.m_digit.clear();
+		for (int i = (int)q.size() - 1; i >= 0; --i)
+			_quotient.m_digit.push_back(q[i]);
+		_quotient.m_isNegative = false;
+		if (_quotient.m_digit.empty())
+			_quotient.m_digit.push_back(0);
+
+		_remainder.m_digit.clear();
+		for (int i = (int)r.size() - 1; i >= 0; --i)
+			_remainder.m_digit.push_back(r[i]);
+		_remainder.m_isNegative = false;
+		if (_remainder.m_digit.empty())
+			_remainder.m_digit.push_back(0);
+
+		_quotient.Normalize();
+		_remainder.Normalize();
+	}
+
+	BigInteger BigInteger::MulOrigin(const BigInteger& _a, const BigInteger& _b)
+	{
+		BigInteger result;
+
+		// 0 체크
+		if ((_a.m_digit.size() == 1 && _a.m_digit[0] == 0) ||
+			(_b.m_digit.size() == 1 && _b.m_digit[0] == 0))
+		{
+			// 초기 result = 0
+			return result;
+		}
+
+		// 양수로 고정하고 연산
+		result.m_isNegative = false;
+
+		// 자릿수 미리 확보
+		result.m_digit.assign(_a.m_digit.size() + _b.m_digit.size(), 0);
+
+		for (size_t i = 0; i < _a.m_digit.size(); i++)
+		{
+			ll carry = 0;
+
+			for (size_t j = 0; j < _b.m_digit.size(); j++)
+			{
+				ll value = result.m_digit[i + j]
+					+ (ll)_a.m_digit[i] * _b.m_digit[j]
+					+ carry;
+
+				result.m_digit[i + j] = value % m_base;
+				carry = value / m_base;
+			}
+
+			size_t pos = i + _b.m_digit.size();
+			while (carry > 0)
+			{
+				ll value = result.m_digit[pos] + carry;
+
+				result.m_digit[pos] = value % m_base;
+				carry = value / m_base;
+				pos++;
+
+				if (pos >= result.m_digit.size())
+					result.m_digit.push_back(0);
+			}
+		}
+
+		// 최상위 0 제거
+		while (result.m_digit.size() > 1 && result.m_digit.back() == 0)
+			result.m_digit.pop_back();
+
+		return result;
+	}
+
+	BigInteger BigInteger::MulKaratsuba(const BigInteger& _a, const BigInteger& _b)
+	{
+		size_t aSize = _a.m_digit.size();
+		size_t bSize = _b.m_digit.size();
+		size_t n = std::max(aSize, bSize);
+		if (n <= m_karatsubaThreshold)
+			return MulOrigin(_a, _b);
+
+		size_t half = n / 2;
+
+		BigInteger aLow, aHigh, bLow, bHigh;
+
+		// 하위 half 블록과 나머지로 분리
+		size_t aLowSize = std::min(aSize, half);
+		if (aLowSize > 0)
+		{
+			aLow.m_digit.assign(_a.m_digit.begin(), _a.m_digit.begin() + aLowSize);
+		}
+		else
+		{
+			aLow.m_digit.clear();
+			aLow.m_digit.push_back(0);
+		}
+		aLow.m_isNegative = false;
+
+		if (aSize > half)
+			aHigh.m_digit.assign(_a.m_digit.begin() + half, _a.m_digit.end());
+
+		size_t bLowSize = std::min(bSize, half);
+		if (bLowSize > 0)
+		{
+			bLow.m_digit.assign(_b.m_digit.begin(), _b.m_digit.begin() + bLowSize);
+		}
+		else
+		{
+			bLow.m_digit.clear();
+			bLow.m_digit.push_back(0);
+		}
+		bLow.m_isNegative = false;
+
+		if (bSize > half)
+			bHigh.m_digit.assign(_b.m_digit.begin() + half, _b.m_digit.end());
+
+		// Karatsuba = z0 + z1 + z2
+		// z0 = aLow * bLow
+		BigInteger z0 = MulKaratsuba(aLow, bLow);
+
+		// z2 = aHigh * bHigh
+		BigInteger z2 = MulKaratsuba(aHigh, bHigh);
+
+		// z1 = (aLow + aHigh) * (bLow + bHigh) - z0 - z2
+		BigInteger z1 = MulKaratsuba(aLow + aHigh, bLow + bHigh) - z0 - z2;
+
+		BigInteger result;
+		result.m_isNegative = false;
+		result.m_digit.assign(2 * n + 2, 0);
+
+		for (int i = 0; i < z0.m_digit.size(); i++)
+			result.m_digit[i] += z0.m_digit[i];
+
+		for (int i = 0; i < z1.m_digit.size(); i++)
+			result.m_digit[i + half] += z1.m_digit[i];
+
+		for (int i = 0; i < z2.m_digit.size(); i++)
+			result.m_digit[i + 2 * half] += z2.m_digit[i];
+
+		// 각 자리값 정리
+		result.Normalize();
+		return result;
+	}
+
+	BigInteger BigInteger::RandomOffset(const BigInteger& _upper)
+	{
+		if (_upper <= 0)
+			throw std::invalid_argument("BigInteger's RandomOffset: upper is must be positive");
+
+		if (_upper == 1)
+			return 0;
+
+		std::string upperString = _upper.ToString();
+		int maxDigits = static_cast<int>(upperString.size());
+
+		std::uniform_int_distribution<int> lengthDist(1, maxDigits);
+		std::uniform_int_distribution<int> firstDigitDist(1, 9);
+		std::uniform_int_distribution<int> digitDist(0, 9);
+
+		while (true)
+		{
+			int currentDigits = lengthDist(GetRandomEngine());
+
+			std::string randomString;
+			randomString.reserve(currentDigits);
+
+			if (currentDigits == 1)
+			{
+				randomString += static_cast<char>('0' + digitDist(GetRandomEngine()));
+			}
+			// 2자리 수 이상인 경우, 좌측 0 방지
+			else
+			{
+				randomString += static_cast<char>('0' + firstDigitDist(GetRandomEngine()));
+				for (int i = 1; i < currentDigits; i++)
+				{
+					randomString += static_cast<char>('0' + digitDist(GetRandomEngine()));
+				}
+			}
+			
+			BigInteger candidate(randomString);
+
+			if (candidate < _upper)
+				return candidate;
+		}
 	}
 }

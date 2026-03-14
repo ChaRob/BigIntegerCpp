@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include <iosfwd>
+#include <random>
 
 namespace bigint
 {
@@ -25,8 +26,16 @@ namespace bigint
 
 		// 공용 멤버 변수 정릐
 	private:
-		static const int m_base = 1e9;	// 기수, 항상 10의 제곱으로 표현되야함
-		static const int m_chunk = 9;	// 기수에 따른 사이즈
+		static const int m_base = 1000000000;	// 기수, 항상 10의 제곱으로 표현되야함
+		static const int m_chunk = 9;			// 기수에 따른 사이즈
+
+		// Karatsuba 사용 임계 길이, 해당 블록 수 넘을 시 사용
+		static const int m_karatsubaThreshold = 128;
+
+		// Knuth 사용 임계 길이
+		// Note: 현재 값 부정확하여 사용 불가
+		//static const int m_knuthThreshold = 32;
+		static const int m_knuthThreshold = 100000000;
 
 		// 클래스 멤버 변수 정의
 	private:
@@ -79,6 +88,9 @@ namespace bigint
 		static BigInteger ModPow(BigInteger _base, BigInteger _exp, const BigInteger& _mod);	// 모듈러 거듭제곱
 		static BigInteger Gcd(BigInteger _a, BigInteger _b);									// 최대공약수
 		static BigInteger Lcm(BigInteger _a, BigInteger _b);									// 최소공배수
+
+		static BigInteger Random(int _digits, bool _allowNegative);	// 10진수 기준 자리수 및 음수 포함 여부
+		static BigInteger RandomInRange(const BigInteger& _min, const BigInteger& _max);
 		
 		// 내부 멤버 함수 정의
 	private:
@@ -92,5 +104,18 @@ namespace bigint
 		static BigInteger SubAbs(const BigInteger& _a, const BigInteger& _b); // |a| > |b| 가정
 		static BigInteger MulSmall(const BigInteger& _a, int _factor);
 		static void DivModAbs(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder);
+		static void DivModAbsKnuth(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder);	// Knuth style
+
+		// 곱셈 헬퍼
+		static BigInteger MulOrigin(const BigInteger& _a, const BigInteger& _b);
+		static BigInteger MulKaratsuba(const BigInteger& _a, const BigInteger& _b);
+
+		// 랜덤 헬퍼
+		inline static std::mt19937& GetRandomEngine()
+		{
+			static std::mt19937 engine(std::random_device{}());
+			return engine;
+		}
+		static BigInteger RandomOffset(const BigInteger& _upper);
 	};
 }
