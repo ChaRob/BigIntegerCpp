@@ -33,7 +33,9 @@ namespace bigint
 		static const int m_karatsubaThreshold = 128;
 
 		// Knuth 사용 임계 길이
-		static const int m_knuthThreshold = 32;
+		// Note: 현재 값 부정확하여 사용 불가
+		//static const int m_knuthThreshold = 32;
+		static const int m_knuthThreshold = 100000000;
 
 		// 클래스 멤버 변수 정의
 	private:

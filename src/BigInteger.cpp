@@ -825,10 +825,11 @@ namespace bigint
 		}
 
 		// 사이즈에 따라서 더 최적화된 알고리즘 선택
+		// Note: 현재 값 부정확하여 사용 불가
 		if (_b.m_digit.size() >= m_knuthThreshold)
 		{
-			DivModAbsKnuth(_a, _b, _quotient, _remainder);
-			return;
+			//DivModAbsKnuth(_a, _b, _quotient, _remainder);
+			//return;
 		}
 
 		_remainder = _a;
@@ -893,6 +894,7 @@ namespace bigint
 		_remainder.Normalize();
 	}
 
+	// Note: 현재 값 부정확하여 사용 불가
 	void BigInteger::DivModAbsKnuth(const BigInteger& _a, const BigInteger& _b, BigInteger& _quotient, BigInteger& _remainder)
 	{
 		// big-endian 처리
@@ -1009,7 +1011,8 @@ namespace bigint
 					}
 					u[j + 1 + i] = (int)cur;
 				}
-				u[j] = (int)(cur0 + m_base); // borrow 한 번 되돌린 효과
+				// add-back에서 발생한 carry까지 반영
+				u[j] = (int)(cur0 + carry);
 			}
 			else
 			{
